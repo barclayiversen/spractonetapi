@@ -1,0 +1,2 @@
+POSTGRES_URL="postgres://username:password@hostname.com:5432"
+JWT_SECRET="SOMESECRET"
