@@ -3,10 +3,10 @@ package controllers
 import (
 	"database/sql"
 	"fmt"
-	"goapi/models"
-	"goapi/repository/userRepository"
-	"goapi/utils"
 	"net/http"
+	"spractonetapi/models"
+	"spractonetapi/repository/userRepository"
+	"spractonetapi/utils"
 	"strconv"
 
 	"github.com/gorilla/mux"

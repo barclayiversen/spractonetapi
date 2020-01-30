@@ -5,8 +5,8 @@ import (
 	"log"
 	"net/http"
 
-	"goapi/controllers"
-	"goapi/driver"
+	"spractonetapi/controllers"
+	"spractonetapi/driver"
 
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"

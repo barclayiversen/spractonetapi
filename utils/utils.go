@@ -2,10 +2,10 @@ package utils
 
 import (
 	"encoding/json"
-	"goapi/models"
 	"log"
 	"net/http"
 	"os"
+	"spractonetapi/models"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"

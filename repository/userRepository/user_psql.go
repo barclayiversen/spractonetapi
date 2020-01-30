@@ -3,8 +3,8 @@ package userRepository
 import (
 	"database/sql"
 	"fmt"
-	"goapi/models"
 	"log"
+	"spractonetapi/models"
 )
 
 type UserRepository struct{}
