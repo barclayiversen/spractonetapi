@@ -9,7 +9,3 @@ type User struct {
 	Country  string `json:"country"`
 	Username string `json:"username"`
 }
-
-type Hobby struct {
-	Hobby string `json:"hobby"`
-}

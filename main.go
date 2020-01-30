@@ -24,12 +24,9 @@ func main() {
 	controller := controllers.Controller{}
 	router := mux.NewRouter()
 
-	router.HandleFunc("/test", controller.TokenVerifyMiddleware(controller.Test()))
-	router.HandleFunc("/signup", controller.Signup(db)).Methods("POST", "OPTIONS")
 	router.HandleFunc("/login", controller.Login(db)).Methods("POST", "OPTIONS")
 	router.HandleFunc("/users/{id}", controller.TokenVerifyMiddleware(controller.GetUserById(db))).Methods("GET", "OPTIONS")
-	// router.HandleFunc("/users/{id}", controller.TokenVerifyMiddleware(controller.SaveUserData(db))).Methods("POST", "OPTIONS")
-	router.HandleFunc("/protected", controller.TokenVerifyMiddleware(controller.ProtectedEndpoint()))
+	router.HandleFunc("/users", controller.Signup(db)).Methods("POST", "OPTIONS")
 
 	router.Use(mux.CORSMethodMiddleware(router))
 
