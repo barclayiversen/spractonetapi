@@ -5,47 +5,22 @@ import (
 	"encoding/json"
 	"fmt"
 	"goapi/models"
+	"goapi/repository/userRepository"
+	"goapi/utils"
 	"log"
 	"net/http"
 	"os"
 	"strings"
 
-	"goapi/repository/userRepository"
-	"goapi/utils"
-
 	"github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/bcrypt"
 )
-
-//Remove for more strait forward functionality, downside is this requires refactor on the
-//front end.
-// func (c Controller) SaveUserData(db *sql.DB) http.HandlerFunc {
-// 	return func(w http.ResponseWriter, r *http.Request) {
-
-// 		w.Header().Set("Access-Control-Allow-Origin", "*")
-// 		w.Header().Set("Access-Control-Allow-Headers", "Origin, Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, X-Requested-With, Access-Control-Allow-Origin")
-// 		if r.Method == "OPTIONS" {
-// 			return
-// 		}
-
-// 		params := mux.Vars(r)
-// 		var user models.User
-// 		json.NewDecoder(r.Body).Decode(&user)
-// 		userRepo := userRepository.UserRepository{}
-// 		err := userRepo.SaveUserById(db, user)
-// 		if err != nil {
-// 			utils.RespondWithError(w, http.StatusBadRequest, "Something went wrong")
-// 			return
-// 		}
-// 		utils.ResponseJSON(w, "OK")
-// 	}
-// }
 
 func (c Controller) Signup(db *sql.DB) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Headers", "Origin, Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, X-Requested-With, Access-Control-Allow-Origin")
+		w.Header().Set("Access-Control-Allow-Headers", "Origin, Accept, Content-Type, Authorization, Access-Control-Allow-Origin")
 
 		if r.Method == "OPTIONS" {
 			return
@@ -83,8 +58,6 @@ func (c Controller) Signup(db *sql.DB) http.HandlerFunc {
 
 		//This is bad
 		if err != nil && err.Error() == "pq: duplicate key value violates unique constraint \"users_email_key\"" {
-
-			fmt.Println("this is where I am", user, err)
 			utils.RespondWithError(w, http.StatusBadRequest, "That email is already registered")
 			return
 		}
@@ -99,7 +72,7 @@ func (c Controller) Signup(db *sql.DB) http.HandlerFunc {
 			log.Fatal(err)
 		}
 
-		//Data structures are messy
+		//Data structures could be better here
 		user.Password = ""
 		user.Token = token
 		utils.ResponseJSON(w, user)
@@ -111,7 +84,7 @@ func (c Controller) Login(db *sql.DB) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*") //find a way to auto add this header in every request.
-		w.Header().Set("Access-Control-Allow-Headers", "Origin, Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, X-Requested-With, Access-Control-Allow-Origin")
+		w.Header().Set("Access-Control-Allow-Headers", "Origin, Accept, Content-Type, Authorization, Access-Control-Allow-Origin")
 
 		if r.Method == "OPTIONS" {
 			return

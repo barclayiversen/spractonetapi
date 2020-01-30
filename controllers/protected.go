@@ -14,21 +14,6 @@ import (
 
 type Controller struct{}
 
-func (c Controller) ProtectedEndpoint() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-
-		w.Write([]byte("\"yes\""))
-		fmt.Println("protected endpoint invoked")
-	}
-}
-
-func (c Controller) Test() http.HandlerFunc {
-
-	return func(w http.ResponseWriter, r *http.Request) {
-		utils.ResponseJSON(w, "testing")
-	}
-}
-
 func (c Controller) GetUserById(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
