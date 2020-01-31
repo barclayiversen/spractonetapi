@@ -43,7 +43,3 @@ func GenerateToken(user models.User) (string, error) {
 
 	return tokenString, nil
 }
-
-func ComparePasswords(hash string, password []byte) bool {
-	return true
-}
