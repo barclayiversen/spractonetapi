@@ -34,7 +34,6 @@ func (c Controller) Signup(db *sql.DB) http.HandlerFunc {
 
 		var user models.User
 		json.NewDecoder(r.Body).Decode(&user)
-		fmt.Println("user in signup ", user)
 
 		if user.Email == "" {
 			utils.RespondWithError(w, http.StatusBadRequest, "Email is missing")
