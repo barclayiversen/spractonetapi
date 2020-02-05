@@ -16,6 +16,12 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+func (c Controller) HelloWorld() http.HandleFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		utils.ResponseJSON(w, "Welcome to Spracto net!")
+	}
+}
+
 func (c Controller) Signup(db *sql.DB) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {

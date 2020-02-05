@@ -24,6 +24,7 @@ func main() {
 	controller := controllers.Controller{}
 	router := mux.NewRouter()
 
+	router.HandleFunc("/", controller.HelloWorld()).Methods("GET"))
 	router.HandleFunc("/login", controller.Login(db)).Methods("POST", "OPTIONS")
 	router.HandleFunc("/users/{id}", controller.TokenVerifyMiddleware(controller.GetUserById(db))).Methods("GET", "OPTIONS")
 	router.HandleFunc("/users", controller.Signup(db)).Methods("POST", "OPTIONS")
