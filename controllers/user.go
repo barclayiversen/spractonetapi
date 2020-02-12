@@ -67,11 +67,13 @@ func (c Controller) Signup(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		if err != nil && err.Error() != "pq: duplicate key value violates unique constraint \"users_email_key\"" {
-			utils.RespondWithError(w, http.StatusBadRequest, err.Error())
+		if err != nil && err.Error() == "pq: duplicate key value violates unique constraint \"username_is_unique\"" {
+			utils.RespondWithError(w, http.StatusBadRequest, "That username is taken")
+			return
 		}
 
-		token, err := utils.GenerateToken(user)
+		// instead of generating a token. Create a magic link and send an email.
+		//token, err := utils.GenerateToken(user)
 
 		if err != nil {
 			log.Fatal(err)
@@ -79,8 +81,8 @@ func (c Controller) Signup(db *sql.DB) http.HandlerFunc {
 
 		//Data structures could be better here
 		user.Password = ""
-		user.Token = token
-		utils.ResponseJSON(w, user)
+		// user.Token = token
+		utils.ResponseJSON(w, "Signup Successful!")
 	}
 
 }
