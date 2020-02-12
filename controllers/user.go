@@ -53,7 +53,10 @@ func (c Controller) Signup(db *sql.DB) http.HandlerFunc {
 		hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), 10)
 
 		if err != nil {
-			log.Fatal(err)
+			log.Println(err)
+			utils.RespondWithError(w, http.StatusInternalServerError, "Something went wrong. Please try again later. ")
+			return
+			//log.Fatal(err)
 		}
 
 		user.Password = string(hash)
