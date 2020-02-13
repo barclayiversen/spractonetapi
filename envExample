@@ -1,2 +1,5 @@
 POSTGRES_URL="postgres://username:password@hostname.com:5432"
-JWT_SECRET="SOMESECRET"
+JWT_SECRET="coolsecretbro"
+FROM="SomeEmailAccount@somedomain.com"
+MAILPASS="thepasswordtothatemailaccountyouown123!"
+SMTPSERVER="smtp.someemailserver.com:587"
