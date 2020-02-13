@@ -9,4 +9,5 @@ type User struct {
 	Country   string `json:"country"`
 	Username  string `json:"username" validate:"required"`
 	Activated bool   `json:"activated"`
+	SignupKey string `json:"signupkey"`
 }
