@@ -10,9 +10,11 @@ import (
 	"spractonetapi/models"
 	"spractonetapi/repository/userRepository"
 	"spractonetapi/utils"
+	"strconv"
 	"strings"
 
 	"github.com/dgrijalva/jwt-go"
+	uuid "github.com/satori/go.uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -67,6 +69,13 @@ func (c Controller) Signup(db *sql.DB) http.HandlerFunc {
 
 		user.Password = string(hash)
 
+		u2 := uuid.Must(uuid.NewV4()).String()
+		if err != nil {
+			fmt.Printf("Something went wrong: %s", err)
+			return
+		}
+
+		user.SignupKey = u2
 		userRepo := userRepository.UserRepository{}
 		user, err = userRepo.Signup(db, user)
 
