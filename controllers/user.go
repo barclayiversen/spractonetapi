@@ -50,6 +50,13 @@ func (c Controller) Signup(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
+		valid := utils.IsEmail(user)
+
+		if valid != true {
+			utils.RespondWithError(w, http.StatusBadRequest, "Please provide a valid Email address IE email@domain.com")
+			return
+		}
+
 		hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), 10)
 
 		if err != nil {
