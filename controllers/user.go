@@ -90,23 +90,20 @@ func (c Controller) Signup(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		// instead of generating a token. Create a magic link and send an email.
-		// link would look like:
-		// https://api.spracto.net/verifyemail?token=ajkldfjaskl;dfjkasl;dfjklsa;dj&id=23
+		// Create magic link
+		tokenString := "https://api.spracto.net/verifyemail?token="
 
-		//tokenString := "https://api.spracto.net/verifyemail?"
+		fmt.Printf("UUIDv4: %s\n", u2)
+		tokenString += u2
+		tokenString += "&userid="
+		tokenString += strconv.Itoa(user.ID)
 
-		//token, err := utils.GenerateToken(user)
-		// if err != nil {
-		// 	log.Fatal(err)
-		// }
+		fmt.Println(tokenString)
 
-		//success := utils.Send(user)
-		success := true
-		if success == true {
-			user.Password = ""
-			// user.Token = token
-			utils.ResponseJSON(w, "Signup Successful!")
+		err = utils.Send(user, tokenString)
+		if err != nil {
+			utils.RespondWithError(w, http.StatusBadGateway, "We weren't able to send you a verifcation email.")
+			return
 		} else {
 			return
 			// remove user from db????

@@ -4,13 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"net"
 	"net/http"
 	"net/mail"
 	"net/smtp"
 	"os"
 	"spractonetapi/models"
-	"strconv"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -74,38 +72,24 @@ func GenerateToken(user models.User) (string, error) {
 	return tokenString, nil
 }
 
-func NewMailSender(host string, port int, username, password string) *MailSender {
-	return &MailSender{
-		Addr: net.JoinHostPort(host, strconv.Itoa(port)),
-		Auth: smtp.PlainAuth("", username, password, host),
-		From: mail.Address{
-			Name:    "Spracto net Mailer (no reply)",
-			Address: "testenvsa2@gmail.com",
-		},
-	}
-}
+func Send(u models.User, activationUrl string) error {
+	auth := smtp.PlainAuth("", os.Getenv("FROM"), os.Getenv("MAILPASS"), os.Getenv("SMTPSERVER"))
 
-func (s *MailSender) Send(mail Mail) error {
-	headers := map[string]string{
-		"From":         s.From.String(),
-		"To":           mail.To.String(),
-		"Subject":      mail.Subject,
-		"MIME-Version": "1.0",
-		"Content-Type": "text/html; charset=utf-8",
-	}
-	msg := ""
-	for k, v := range headers {
-		msg += fmt.Sprintf("%s: %s\r\n", k, v)
-	}
-	msg += "\r\n"
-	msg += mail.Body
+	to := []string{u.Email}
+	msg := []byte("From: " + "\n" + "To:" + u.Email + "\r\n" +
+		"Subject: Welcome to Spracto net \r\n" +
+		"\r\n" +
+		"Here's your link to activate your account: " + activationUrl)
 
-	return smtp.SendMail(
-		s.Addr,
-		s.Auth,
-		s.From.Address,
-		[]string{mail.To.Address},
-		[]byte(msg))
+	err := smtp.SendMail(os.Getenv("SMTPSERVER")+":587", auth, "noreply@spracto.net", to, []byte(msg))
+
+	if err != nil {
+		log.Printf("smtp error: %s", err)
+		return err
+	}
+	log.Print("sent " + activationUrl)
+
+	return nil
 }
 
 // Hoping to get this working later.
