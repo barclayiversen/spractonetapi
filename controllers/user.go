@@ -50,9 +50,9 @@ func (c Controller) Signup(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		valid := utils.IsEmail(user)
+		EmailIsValid := utils.IsEmail(user)
 
-		if valid != true {
+		if EmailIsValid != true {
 			utils.RespondWithError(w, http.StatusBadRequest, "Please provide a valid Email address IE email@domain.com")
 			return
 		}
@@ -61,9 +61,8 @@ func (c Controller) Signup(db *sql.DB) http.HandlerFunc {
 
 		if err != nil {
 			log.Println(err)
-			utils.RespondWithError(w, http.StatusInternalServerError, "Something went wrong. Please try again later. ")
+			utils.RespondWithError(w, http.StatusInternalServerError, "Something went wrong. Please try again later.")
 			return
-			//log.Fatal(err)
 		}
 
 		user.Password = string(hash)
@@ -83,16 +82,28 @@ func (c Controller) Signup(db *sql.DB) http.HandlerFunc {
 		}
 
 		// instead of generating a token. Create a magic link and send an email.
+		// link would look like:
+		// https://api.spracto.net/verifyemail?token=ajkldfjaskl;dfjkasl;dfjklsa;dj&id=23
+
+		//tokenString := "https://api.spracto.net/verifyemail?"
+
 		//token, err := utils.GenerateToken(user)
+		// if err != nil {
+		// 	log.Fatal(err)
+		// }
 
-		if err != nil {
-			log.Fatal(err)
+		//success := utils.Send(user)
+		success := true
+		if success == true {
+			user.Password = ""
+			// user.Token = token
+			utils.ResponseJSON(w, "Signup Successful!")
+		} else {
+			return
+			// remove user from db????
 		}
-
 		//Data structures could be better here
-		user.Password = ""
-		// user.Token = token
-		utils.ResponseJSON(w, "Signup Successful!")
+
 	}
 
 }

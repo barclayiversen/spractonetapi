@@ -16,7 +16,7 @@ func logFatal(err error) {
 }
 
 func (u UserRepository) Signup(db *sql.DB, user models.User) (models.User, error) {
-	stmt := "INSERT INTO USERS (email,password,username) VALUES ($1, $2, $3) RETURNING id;"
+	stmt := "INSERT INTO USERS (email,password,username,activated) VALUES ($1, $2, $3, false) RETURNING id;"
 	err := db.QueryRow(stmt, user.Email, user.Password, user.Username).Scan(&user.ID)
 
 	if err != nil {
@@ -30,8 +30,8 @@ func (u UserRepository) Signup(db *sql.DB, user models.User) (models.User, error
 
 func (u UserRepository) Login(db *sql.DB, user models.User) (models.User, error) {
 
-	row := db.QueryRow("SELECT id, email, username, password FROM users WHERE email = $1", user.Email)
-	err := row.Scan(&user.ID, &user.Email, &user.Username, &user.Password)
+	row := db.QueryRow("SELECT id, email, username, password, activated FROM users WHERE email = $1", user.Email)
+	err := row.Scan(&user.ID, &user.Email, &user.Username, &user.Password, &user.Activated)
 
 	if err != nil {
 		return user, err
