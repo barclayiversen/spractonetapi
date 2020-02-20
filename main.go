@@ -28,6 +28,7 @@ func main() {
 	router.HandleFunc("/login", controller.Login(db)).Methods("POST", "OPTIONS")
 	router.HandleFunc("/users/{id}", controller.TokenVerifyMiddleware(controller.GetUserById(db))).Methods("GET", "OPTIONS")
 	router.HandleFunc("/users", controller.Signup(db)).Methods("POST", "OPTIONS")
+	router.HandleFunc("/verifyemail", controller.VerifyEmail(db)).Methods("GET", "OPTIONS")
 
 	router.Use(mux.CORSMethodMiddleware(router))
 

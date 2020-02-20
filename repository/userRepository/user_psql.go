@@ -2,6 +2,7 @@ package userRepository
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"spractonetapi/models"
@@ -50,4 +51,28 @@ func (u UserRepository) GetUserById(db *sql.DB, user models.User, userId int) (m
 	}
 
 	return user, nil
+}
+
+func (u UserRepository) CheckKey(db *sql.DB, id int, uuid string) error {
+	var user models.User
+	row := db.QueryRow("SELECT id, activation_key FROM users WHERE id = $1", id)
+	err := row.Scan(&user.ID, &user.SignupKey)
+
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	if uuid == user.SignupKey && id == user.ID {
+		return nil
+	} else {
+		log.Println("There was an error verifying the email.")
+		log.Println("Here are the values:")
+		log.Println("user id that was provided:", id)
+		log.Println("uuid that was passed in:", uuid)
+		log.Println("user id from DB", user.ID)
+		log.Println("Signup key from DB:", user.SignupKey)
+
+		return errors.New("Something didn't match")
+	}
 }

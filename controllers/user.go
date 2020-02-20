@@ -104,12 +104,8 @@ func (c Controller) Signup(db *sql.DB) http.HandlerFunc {
 		if err != nil {
 			utils.RespondWithError(w, http.StatusBadGateway, "We weren't able to send you a verifcation email.")
 			return
-		} else {
-			return
-			// remove user from db????
 		}
-		//Data structures could be better here
-
+		return
 	}
 
 }
