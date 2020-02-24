@@ -64,6 +64,7 @@ func (u UserRepository) CheckKey(db *sql.DB, id int, uuid string) error {
 	}
 
 	if uuid == user.SignupKey && id == user.ID {
+		db.Query("UPDATE users SET activated = TRUE WHERE id = $1", id)
 		return nil
 	} else {
 		log.Println("There was an error verifying the email.")
