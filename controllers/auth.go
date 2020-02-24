@@ -36,9 +36,11 @@ func (c Controller) VerifyEmail(db *sql.DB) http.HandlerFunc {
 
 		if err != nil {
 			log.Println("Error creating email: ", err)
-			utils.RespondWithError(w, http.StatusBadRequest, "Something went wrong verifying your email. Please try again")
+			utils.RespondWithError(w, http.StatusBadRequest, err.Error())
+			return
 		}
 
 		utils.ResponseJSON(w, "Email Verified!")
+		return
 	}
 }

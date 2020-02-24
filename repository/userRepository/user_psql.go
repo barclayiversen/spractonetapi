@@ -55,12 +55,17 @@ func (u UserRepository) GetUserById(db *sql.DB, user models.User, userId int) (m
 
 func (u UserRepository) CheckKey(db *sql.DB, id int, uuid string) error {
 	var user models.User
-	row := db.QueryRow("SELECT id, activation_key FROM users WHERE id = $1", id)
-	err := row.Scan(&user.ID, &user.SignupKey)
+	row := db.QueryRow("SELECT id, activation_key, activated FROM users WHERE id = $1", id)
+	err := row.Scan(&user.ID, &user.SignupKey, &user.Activated)
 
 	if err != nil {
 		log.Println(err)
-		return err
+		return errors.New("Something went wrong, please try again later.")
+	}
+
+	if user.Activated == true {
+		log.Println("Already activated")
+		return errors.New("This account is already activated")
 	}
 
 	if uuid == user.SignupKey && id == user.ID {
