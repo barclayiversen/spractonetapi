@@ -91,7 +91,15 @@ func (c Controller) Signup(db *sql.DB) http.HandlerFunc {
 		}
 
 		// Create magic link
-		tokenString := "https://api.spracto.net/verifyemail?token="
+		var tokenString string
+
+		if os.Getenv("ENV") == "dev" {
+			tokenString = "http://localhost:8080/verifyemail?token="
+		}
+
+		if os.Getenv("ENV") == "prod" {
+			tokenString = "https://api.spracto.net/verifyemail?token="
+		}
 
 		fmt.Printf("UUIDv4: %s\n", u2)
 		tokenString += u2
@@ -105,6 +113,7 @@ func (c Controller) Signup(db *sql.DB) http.HandlerFunc {
 			utils.RespondWithError(w, http.StatusBadGateway, "We weren't able to send you a verifcation email.")
 			return
 		}
+
 		return
 	}
 
