@@ -37,6 +37,9 @@ func (u UserRepository) Login(db *sql.DB, user models.User) (models.User, error)
 	if err != nil {
 		return user, err
 	}
+	if user.Activated == false {
+		return user, errors.New("Please activate your account to log in.")
+	}
 
 	return user, nil
 }

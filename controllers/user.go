@@ -136,7 +136,9 @@ func (c Controller) Login(db *sql.DB) http.HandlerFunc {
 				utils.RespondWithError(w, http.StatusBadRequest, "The User does not exist")
 				return
 			} else {
-				log.Fatal(err)
+				log.Println(err)
+				utils.RespondWithError(w, http.StatusBadRequest, err.Error())
+				return
 			}
 		}
 
