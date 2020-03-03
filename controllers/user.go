@@ -27,12 +27,6 @@ func (c Controller) HelloWorld() http.HandlerFunc {
 func (c Controller) Signup(db *sql.DB) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Headers", "Origin, Accept, Content-Type, Authorization, Access-Control-Allow-Origin")
-
-		if r.Method == "OPTIONS" {
-			return
-		}
 
 		var user models.User
 		json.NewDecoder(r.Body).Decode(&user)
@@ -122,12 +116,6 @@ func (c Controller) Signup(db *sql.DB) http.HandlerFunc {
 func (c Controller) Login(db *sql.DB) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*") //find a way to auto add this header in every request.
-		w.Header().Set("Access-Control-Allow-Headers", "Origin, Accept, Content-Type, Authorization, Access-Control-Allow-Origin")
-
-		if r.Method == "OPTIONS" {
-			return
-		}
 
 		var user models.User
 
@@ -176,10 +164,6 @@ func (c Controller) TokenVerifyMiddleware(next http.HandlerFunc) http.HandlerFun
 
 		w.Header().Set("Access-Control-Allow-Headers", "Accepts, Origin, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, X-Requested-With, Access-Control-Allow-Origin")
 		w.Header().Set("Access-Control-Allow-Origin", "*")
-
-		if r.Method == "OPTIONS" {
-			return
-		}
 
 		var errorObject models.Error
 		authHeader := r.Header.Get("Authorization")

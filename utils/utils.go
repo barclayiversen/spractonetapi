@@ -2,7 +2,6 @@ package utils
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"net/mail"
@@ -90,14 +89,4 @@ func Send(u models.User, activationUrl string) error {
 	log.Print("sent " + activationUrl)
 
 	return nil
-}
-
-// Hoping to get this working later.
-func SetHeader(next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("in set header")
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Headers", "Origin, Accept, Content-Type, Authorization, Access-Control-Allow-Origin")
-		next(w, r)
-	}
 }
