@@ -84,6 +84,11 @@ func (c Controller) Signup(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
+		if err != nil {
+			utils.RespondWithError(w, http.StatusBadRequest, "Something went wrong")
+			return
+		}
+
 		// Create magic link
 		var tokenString string
 
