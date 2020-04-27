@@ -24,7 +24,6 @@ func (u UserRepository) Signup(db *sql.DB, user models.User) (models.User, error
 		fmt.Println(err)
 		return user, err
 	}
-
 	user.Password = ""
 	return user, nil
 }
@@ -72,7 +71,7 @@ func (u UserRepository) CheckKey(db *sql.DB, id int, uuid string) error {
 	}
 
 	if uuid == user.SignupKey && id == user.ID {
-		db.Query("UPDATE users SET activated = TRUE WHERE id = $1", id)
+		db.Query("UPDATE users SET activated = TRUE, activation_key = null WHERE id = $1", id)
 		return nil
 	} else {
 		log.Println("There was an error verifying the email.")
