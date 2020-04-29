@@ -1,38 +1,60 @@
 package main
 
 import (
-	"database/sql"
+	"context"
+	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 
 	"spractonetapi/controllers"
-	"spractonetapi/driver"
 
-	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
+	"github.com/julienschmidt/httprouter"
 )
 
-var db *sql.DB
+var tpl *template.Template
 
 func init() {
 	godotenv.Load()
+	tpl = template.Must(template.ParseGlob("templates/*.gohtml"))
+
 }
 
 func main() {
+	r := httprouter.New()
+	uc := controllers.NewUserController(tpl)
 
-	db = driver.ConnectDB()
-	controller := controllers.Controller{}
+	r.GET("/", uc.IndexHandler)
+	r.GET("/signup", uc.Signup)
+	r.POST("/signup", uc.Signup)
+	r.GET("/login", uc.Login)
+	r.POST("/login", uc.Login)
 
-	router := mux.NewRouter()
+	r.ServeFiles("/static/*filepath", http.Dir("./static"))
+	fmt.Println("listening on 8000")
+	log.Fatal(http.ListenAndServe(":8000", r))
+}
 
-	router.HandleFunc("/", controller.SetHeader(controller.HelloWorld())).Methods("GET", "OPTIONS")
-	router.HandleFunc("/login", controller.SetHeader(controller.Login(db))).Methods("POST", "OPTIONS")
-	router.HandleFunc("/users/{id}", controller.SetHeader(controller.TokenVerifyMiddleware(controller.GetUserById(db)))).Methods("GET", "OPTIONS")
-	router.HandleFunc("/users", controller.SetHeader(controller.Signup(db))).Methods("POST", "OPTIONS")
-	router.HandleFunc("/verifyemail", controller.SetHeader(controller.VerifyEmail(db))).Methods("GET", "OPTIONS")
+func wrapHandler(h http.Handler) httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+		ctx := r.Context()
 
-	router.Use(mux.CORSMethodMiddleware(router))
+		ctx = context.WithValue(ctx, "params", ps)
 
-	log.Println("Listening on port 8000...")
-	log.Fatal(http.ListenAndServe(":8000", router))
+		r = r.WithContext(ctx)
+		h.ServeHTTP(w, r)
+	}
+}
+
+func loginHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "GET" {
+		tpl.ExecuteTemplate(w, "login.gohtml", nil)
+	}
+}
+
+func signupHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "GET" {
+		tpl.ExecuteTemplate(w, "signup.gohtml", nil)
+	}
 }
