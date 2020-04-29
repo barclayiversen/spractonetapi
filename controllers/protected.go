@@ -12,7 +12,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type Controller struct{}
+//type Controller struct{}
 
 func (c Controller) GetUserById(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
