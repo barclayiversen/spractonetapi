@@ -2,13 +2,14 @@ package driver
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"os"
 
 	"github.com/lib/pq"
 )
 
-var db *sql.DB
+var DB *sql.DB
 
 func ConnectDB() *sql.DB {
 	pgUrl, err := pq.ParseURL(os.Getenv("POSTGRES_URL"))
@@ -16,13 +17,14 @@ func ConnectDB() *sql.DB {
 		log.Fatal(err)
 	}
 
-	db, err = sql.Open("postgres", pgUrl)
+	db, err := sql.Open("postgres", pgUrl)
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	db.Ping()
+	fmt.Println(db.Ping())
 
-	return db
+	DB = db
+	return DB
 }
