@@ -8,31 +8,36 @@
     <!-- Bootstrap CSS -->
     
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
-    <link rel="stylesheet" href="index.css" type="">
+    <link rel="stylesheet" href="/static/index.css" type="text/css">
     <title>Hello, world!</title>
   </head>
   <body>
   {{template "navbar"}}
     <div class="container">
-    
-<form action="/login" method="post">
-  <div class="form-group">
-    <label for="exampleInputEmail1">Email address</label>
-    <input type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" name="email" required>
-    <small id="emailHelp" class="form-text text-muted">We'll never share your email with anyone else.</small>
+    <h4>Create a post</h4>
+      <form>
+        <div class="form-group">
+          <label for="exampleFormControlTextarea1"></label>
+          <textarea class="form-control" id="exampleFormControlTextarea1" rows="3"></textarea>
+        </div>
+          <div class="form-group">
+    <label for="exampleFormControlFile1">Example file input</label>
+    <input type="file" class="form-control-file" id="exampleFormControlFile1">
   </div>
-  <div class="form-group">
-    <label for="exampleInputPassword1">Password</label>
-    <input type="password" class="form-control" id="exampleInputPassword1" name="password" required>
-  </div>
-  <div class="form-group form-check">
-    <input type="checkbox" class="form-check-input" id="exampleCheck1">
-    <label class="form-check-label" for="exampleCheck1">I agree that a cookie can be set so I can log in.</label>
-  </div>
-  <button type="submit" class="btn btn-primary">Submit</button>
-</form>
+      </form>
+         <h3>My posts</h3>
+    <div class="posts">
+      <ul>
+        {{range .Posts}}
+        <li class="post"></li>
+        {{end}}
+      </ul>
+    </div>
+
+
 
     </div>
+    
   {{template "footer"}}
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->

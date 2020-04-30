@@ -3,16 +3,23 @@ package controllers
 import (
 	"database/sql"
 	"fmt"
+	"html/template"
 	"net/http"
 	"spractonetapi/models"
 	"spractonetapi/repository/userRepository"
 	"spractonetapi/utils"
 	"strconv"
 
+	"github.com/julienschmidt/httprouter"
+
 	"github.com/gorilla/mux"
 )
 
 //type Controller struct{}
+
+func NewProtectedController(tpl *template.Template) *Controller {
+	return &Controller{tpl}
+}
 
 func (c Controller) GetUserById(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -33,4 +40,13 @@ func (c Controller) GetUserById(db *sql.DB) http.HandlerFunc {
 		}
 		utils.ResponseJSON(w, user)
 	}
+}
+
+func (c Controller) DashHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	// check for existence of cookie
+
+	// if cookie exists send it to a local redis instance and see if it exists there.
+	// if it does, the value to that key is the user id, possibly other info that
+	// would be kept server side.
+	c.tpl.ExecuteTemplate(w, "dashboard.gohtml", nil)
 }

@@ -11,7 +11,7 @@ import (
 
 var DB *sql.DB
 
-func ConnectDB() *sql.DB {
+func ConnectDB() {
 	pgUrl, err := pq.ParseURL(os.Getenv("POSTGRES_URL"))
 	if err != nil {
 		log.Fatal(err)
@@ -26,5 +26,4 @@ func ConnectDB() *sql.DB {
 	fmt.Println(db.Ping())
 
 	DB = db
-	return DB
 }

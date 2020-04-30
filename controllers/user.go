@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -47,44 +46,33 @@ func (c Controller) Login(w http.ResponseWriter, r *http.Request, ps httprouter.
 	if r.Method == "POST" {
 		var user models.User
 
-		json.NewDecoder(r.Body).Decode(&user)
+		user.Email = r.FormValue("email")
+		user.Password = r.FormValue("password")
 
-		password := user.Password
+		fmt.Println(user)
 
 		userRepo := userRepository.UserRepository{}
+		password := user.Password
 		user, err := userRepo.Login(driver.DB, user)
 
-		hashedPassword := user.Password
-
 		if err != nil {
-			if err == sql.ErrNoRows {
-				utils.RespondWithError(w, http.StatusBadRequest, "The User does not exist")
-				return
-			} else {
-				log.Println(err)
-				utils.RespondWithError(w, http.StatusBadRequest, err.Error())
-				return
-			}
+			log.Println(err)
+			c.tpl.ExecuteTemplate(w, "error.gohtml", err)
+			return
+
 		}
 
+		hashedPassword := user.Password
 		err = bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 		if err != nil {
-			utils.RespondWithError(w, http.StatusUnauthorized, "Invalid Password")
+			c.tpl.ExecuteTemplate(w, "error.gohtml", "Invalid password")
 			return
 		}
 
-		token, err := utils.GenerateToken(user)
+		// Create session
+		http.Redirect(w, r, "/dashboard", 303)
 
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		w.WriteHeader(http.StatusOK)
-		user.Token = token
-		user.Password = ""
-		utils.ResponseJSON(w, user)
 	}
-
 }
 
 func (c Controller) Signup(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
