@@ -1,3 +1,5 @@
+--CREATE DATABASE spractonet;
+
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     email VARCHAR(255),
@@ -10,6 +12,7 @@ CREATE TABLE users (
 
 CREATE TABLE posts (
     id SERIAL PRIMARY KEY,
+    title VARCHAR(64),
     post VARCHAR(2000),
     user_id INT REFERENCES users (id),
     created_at BIGINT
