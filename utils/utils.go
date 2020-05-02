@@ -2,6 +2,7 @@ package utils
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"net/mail"
@@ -10,8 +11,8 @@ import (
 	"spractonetapi/models"
 	"time"
 
+	"github.com/badoux/checkmail"
 	"github.com/dgrijalva/jwt-go"
-	"gopkg.in/go-playground/validator.v9"
 )
 
 type MailSender struct {
@@ -27,11 +28,10 @@ type Mail struct {
 	Body    string
 }
 
-func IsEmail(u models.User) bool {
-	v := validator.New()
-	err := v.Struct(u)
-
+func IsEmail(d models.Data) bool {
+	err := checkmail.ValidateFormat(d.Email)
 	if err != nil {
+		fmt.Println(err)
 		return false
 	}
 
