@@ -49,4 +49,10 @@ func (c Controller) DashHandler(w http.ResponseWriter, r *http.Request, ps httpr
 	// if it does, the value to that key is the user id, possibly other info that
 	// would be kept server side.
 	c.tpl.ExecuteTemplate(w, "dashboard.gohtml", nil)
+
+}
+
+func (c Controller) PostHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+
+	return
 }
