@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"encoding/json"
 	"fmt"
 	"html/template"
 	"log"
@@ -28,11 +27,12 @@ func NewUserController(tpl *template.Template) *Controller {
 	return &Controller{tpl}
 }
 
-func (c Controller) HelloWorld(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	c.tpl.ExecuteTemplate(w, "signup.gohtml", nil)
-}
-
 func (c Controller) IndexHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	// if alreadyLoggedIn(req) {
+	// 	http.Redirect(w, req, "/dashboard", http.StatusSeeOther)
+	// 	return
+	// }
+
 	w.WriteHeader(http.StatusOK)
 	c.tpl.ExecuteTemplate(w, "index.gohtml", nil)
 }
@@ -49,8 +49,6 @@ func (c Controller) Login(w http.ResponseWriter, r *http.Request, ps httprouter.
 		user.Email = r.FormValue("email")
 		user.Password = r.FormValue("password")
 
-		fmt.Println(user)
-
 		userRepo := userRepository.UserRepository{}
 		password := user.Password
 		user, err := userRepo.Login(driver.DB, user)
@@ -59,7 +57,6 @@ func (c Controller) Login(w http.ResponseWriter, r *http.Request, ps httprouter.
 			log.Println(err)
 			c.tpl.ExecuteTemplate(w, "error.gohtml", err)
 			return
-
 		}
 
 		hashedPassword := user.Password
@@ -70,6 +67,7 @@ func (c Controller) Login(w http.ResponseWriter, r *http.Request, ps httprouter.
 		}
 
 		// Create session
+
 		http.Redirect(w, r, "/dashboard", 303)
 
 	}
@@ -82,92 +80,99 @@ func (c Controller) Signup(w http.ResponseWriter, r *http.Request, ps httprouter
 		return
 	}
 
-	var user models.User
-	json.NewDecoder(r.Body).Decode(&user)
+	if r.Method == "POST" {
 
-	if user.Email == "" {
-		utils.RespondWithError(w, http.StatusBadRequest, "Email is missing")
-		return
+		errs := make(map[string]string)
+		var data models.Data
+		data.Email = r.FormValue("email")
+		fmt.Println(data)
+		EmailIsValid := utils.IsEmail(data)
+
+		fmt.Println(EmailIsValid)
+		if EmailIsValid != true {
+			errs["Email"] = "Email is invalid"
+		}
+
+		if len(r.FormValue("password")) < 6 {
+			errs["Password"] = "Password must be at least 6 characters"
+		}
+
+		if r.FormValue("username") == "" {
+			errs["Username"] = "Username requires at least 1 character"
+		}
+
+		if len(errs) > 0 {
+			data.Email = r.FormValue("email")
+			data.Password = r.FormValue("password")
+			data.Username = r.FormValue("username")
+			data.Errs = errs
+			c.tpl.ExecuteTemplate(w, "signup.gohtml", data)
+			return
+		}
+
+		hash, err := bcrypt.GenerateFromPassword([]byte(r.FormValue("password")), 10)
+
+		if err != nil {
+			log.Println(err)
+			utils.RespondWithError(w, http.StatusInternalServerError, "Something went wrong. Please try again later.")
+			return
+		}
+		var user models.User
+		user.Username = r.FormValue("username")
+		user.Email = r.FormValue("email")
+		user.Password = string(hash)
+
+		u2 := uuid.Must(uuid.NewV4()).String()
+		if err != nil {
+			fmt.Printf("Something went wrong: %s", err)
+			return
+		}
+
+		user.SignupKey = u2
+		userRepo := userRepository.UserRepository{}
+		user, err = userRepo.Signup(driver.DB, user)
+
+		//This is bad
+		if err != nil && err.Error() == "pq: duplicate key value violates unique constraint \"users_email_key\"" {
+			utils.RespondWithError(w, http.StatusBadRequest, "That email is already registered")
+			return
+		}
+
+		if err != nil && err.Error() == "pq: duplicate key value violates unique constraint \"username_is_unique\"" {
+			utils.RespondWithError(w, http.StatusBadRequest, "That username is taken")
+			return
+		}
+
+		if err != nil {
+			utils.RespondWithError(w, http.StatusBadRequest, "Something went wrong")
+			return
+		}
+
+		// Create magic link
+		var tokenString string
+
+		if os.Getenv("ENV") == "dev" {
+			tokenString = "http://localhost:8000/verifyemail?token="
+		}
+
+		if os.Getenv("ENV") == "prod" {
+			tokenString = "https://api.spracto.net/verifyemail?token="
+		}
+
+		fmt.Printf("UUIDv4: %s\n", u2)
+		tokenString += u2
+		tokenString += "&userid="
+		tokenString += strconv.Itoa(user.ID)
+
+		fmt.Println(tokenString)
+
+		err = utils.Send(user, tokenString)
+		if err != nil {
+			utils.RespondWithError(w, http.StatusBadGateway, "We weren't able to send you a verifcation email.")
+			return
+		}
+		c.tpl.ExecuteTemplate(w, "emailverified.gohtml", data)
 	}
-
-	if user.Password == "" {
-		utils.RespondWithError(w, http.StatusBadRequest, "Password is missing")
-		return
-	}
-
-	if user.Username == "" {
-		utils.RespondWithError(w, http.StatusBadRequest, "Username is missing")
-		return
-	}
-
-	EmailIsValid := utils.IsEmail(user)
-
-	if EmailIsValid != true {
-		utils.RespondWithError(w, http.StatusBadRequest, "Please provide a valid Email address IE email@domain.com")
-		return
-	}
-
-	hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), 10)
-
-	if err != nil {
-		log.Println(err)
-		utils.RespondWithError(w, http.StatusInternalServerError, "Something went wrong. Please try again later.")
-		return
-	}
-
-	user.Password = string(hash)
-
-	u2 := uuid.Must(uuid.NewV4()).String()
-	if err != nil {
-		fmt.Printf("Something went wrong: %s", err)
-		return
-	}
-
-	user.SignupKey = u2
-	userRepo := userRepository.UserRepository{}
-	user, err = userRepo.Signup(driver.DB, user)
-
-	//This is bad
-	if err != nil && err.Error() == "pq: duplicate key value violates unique constraint \"users_email_key\"" {
-		utils.RespondWithError(w, http.StatusBadRequest, "That email is already registered")
-		return
-	}
-
-	if err != nil && err.Error() == "pq: duplicate key value violates unique constraint \"username_is_unique\"" {
-		utils.RespondWithError(w, http.StatusBadRequest, "That username is taken")
-		return
-	}
-
-	if err != nil {
-		utils.RespondWithError(w, http.StatusBadRequest, "Something went wrong")
-		return
-	}
-
-	// Create magic link
-	var tokenString string
-
-	if os.Getenv("ENV") == "dev" {
-		tokenString = "http://localhost:8080/verifyemail?token="
-	}
-
-	if os.Getenv("ENV") == "prod" {
-		tokenString = "https://api.spracto.net/verifyemail?token="
-	}
-
-	fmt.Printf("UUIDv4: %s\n", u2)
-	tokenString += u2
-	tokenString += "&userid="
-	tokenString += strconv.Itoa(user.ID)
-
-	fmt.Println(tokenString)
-
-	err = utils.Send(user, tokenString)
-	if err != nil {
-		utils.RespondWithError(w, http.StatusBadGateway, "We weren't able to send you a verifcation email.")
-		return
-	}
-
-	return
 
 }
 

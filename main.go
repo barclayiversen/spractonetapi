@@ -34,6 +34,7 @@ func main() {
 	r.GET("/login", uc.Login)
 	r.POST("/login", uc.Login)
 	r.GET("/verifyemail", ac.VerifyEmail)
+	r.POST("/posts", p.PostHandler)
 
 	r.ServeFiles("/static/*filepath", http.Dir("./static"))
 	fmt.Println("listening on 8000")
