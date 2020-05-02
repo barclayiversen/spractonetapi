@@ -14,8 +14,12 @@
   <body>
   {{template "navbar"}}
     <div class="container">
+    {{if .Verified}}
+    <h1>Thank you for Verifying your email. You may now <a class="btn btn-primary" href="/login">Log in</a></h1>
     
-    <h1>Thank you for Verifying your email. You may now <a class="btn" href="/login">Log in</a></h1>
+    {{else}}
+    <h1>Please activate your account</h1>
+    {{end}}
     </div>
   {{template "footer"}}
     <!-- Optional JavaScript -->

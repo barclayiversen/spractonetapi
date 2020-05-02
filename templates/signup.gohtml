@@ -8,32 +8,51 @@
     <!-- Bootstrap CSS -->
     
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
-    <link rel="stylesheet" href="index.css" >
+    <link rel="stylesheet" href="../static/signup.css" >
     <title>Hello, world!</title>
   </head>
   <body>
   {{template "navbar"}}
     <div class="container">
-    
+    {{if .Errs.Email}}
+    <p style="color: red;">{{.Errs.Email}}</p>
+    {{end}}
     <form action="/signup" method="post">
   <div class="form-group">
+
     <label for="exampleInputEmail1">Email address</label>
-    <input type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
+    {{if .Email}}
+    <input type="email" value={{.Email}} name="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
+    {{else}}
+    <input type="email"  name="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
+    {{end}}
     <small id="emailHelp" class="form-text text-muted">We'll never share your email with anyone else.</small>
+
   </div>
+     {{if .Errs.Username}}
+    <p style="color: red;">{{.Errs.Username}}</p>
+    {{end}}
    <div class="form-group">
+    
     <label for="exampleInputEmail1">Username</label>
-    <input type="text" class="form-control" id="username">
+    {{if .Username}}
+    <input type="text" value={{.Username}} name="username" class="form-control" id="username">
+    {{else}}
+    <input type="text" name="username" class="form-control" id="username">
+    {{end}}
   </div>
+       {{if .Errs.Password}}
+    <p style="color: red;">{{.Errs.Password}}</p>
+    {{end}}
   <div class="form-group">
     <label for="exampleInputPassword1">Password</label>
-    <input type="password" class="form-control" id="exampleInputPassword1">
+    <input type="password" name="password" class="form-control" id="exampleInputPassword1">
   </div>
-  <div class="form-group form-check">
-    <input type="checkbox" class="form-check-input" id="exampleCheck1">
-    <label class="form-check-label" for="exampleCheck1">Check me out</label>
-  </div>
-  <button type="submit" class="btn btn-primary">Submit</button>
+  {{/* <div class="form-group form-check"> */}}
+    {{/* <input type="checkbox" class="form-check-input" id="exampleCheck1"> */}}
+    {{/* <label class="form-check-label" for="exampleCheck1">I haven't read the terms I'm agreeing to. </label> */}}
+  {{/* </div> */}}
+  <button type="submit" class="btn btn-primary float-right">Submit</button>
 </form>
     </div>
   {{template "footer"}}
@@ -45,5 +64,7 @@
   </body>
 </html>
 <style>
-
+err p{
+  color: red;
+}
 </style>
