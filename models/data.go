@@ -6,4 +6,5 @@ type Data struct {
 	Password string
 	Username string
 	Verified bool
+	Session  string
 }

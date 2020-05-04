@@ -39,43 +39,54 @@ func (c Controller) IndexHandler(w http.ResponseWriter, r *http.Request, ps http
 
 func (c Controller) Login(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if r.Method == "GET" {
-		c.tpl.ExecuteTemplate(w, "login.gohtml", nil)
-		return
-	}
 
-	if r.Method == "POST" {
-		var user models.User
-
-		user.Email = r.FormValue("email")
-		user.Password = r.FormValue("password")
-
-		userRepo := userRepository.UserRepository{}
-		password := user.Password
-		user, err := userRepo.Login(driver.DB, user)
-
-		if err != nil {
-			log.Println(err)
-			c.tpl.ExecuteTemplate(w, "error.gohtml", err)
+		if AlreadyLoggedIn(w, r) {
+			http.Redirect(w, r, "/dashboard", 303)
 			return
 		}
 
-		hashedPassword := user.Password
-		err = bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
-		if err != nil {
-			c.tpl.ExecuteTemplate(w, "error.gohtml", "Invalid password")
-			return
+		if r.Method == "POST" {
+			var user models.User
+
+			user.Email = r.FormValue("email")
+			user.Password = r.FormValue("password")
+
+			userRepo := userRepository.UserRepository{}
+			password := user.Password
+			user, err := userRepo.Login(driver.DB, user)
+
+			if err != nil {
+				log.Println(err)
+				c.tpl.ExecuteTemplate(w, "error.gohtml", err)
+				return
+			}
+
+			hashedPassword := user.Password
+			err = bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
+			if err != nil {
+				c.tpl.ExecuteTemplate(w, "error.gohtml", "Invalid password")
+				return
+			}
+
+			session, err := utils.GenerateToken(user)
+			if err != nil {
+				log.Fatal(err)
+			}
+			cookie := &http.Cookie{
+				Name:  "session",
+				Value: session,
+			}
+			http.SetCookie(w, cookie)
+			http.Redirect(w, r, "/dashboard", 303)
+
 		}
-
-		// Create session
-
-		http.Redirect(w, r, "/dashboard", 303)
-
 	}
 }
 
 func (c Controller) Signup(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 	if r.Method == "GET" {
+
 		c.tpl.ExecuteTemplate(w, "signup.gohtml", nil)
 		return
 	}
@@ -164,13 +175,13 @@ func (c Controller) Signup(w http.ResponseWriter, r *http.Request, ps httprouter
 		tokenString += "&userid="
 		tokenString += strconv.Itoa(user.ID)
 
-		fmt.Println(tokenString)
-
+		// Send verification email
 		err = utils.Send(user, tokenString)
 		if err != nil {
 			utils.RespondWithError(w, http.StatusBadGateway, "We weren't able to send you a verifcation email.")
 			return
 		}
+		data.Verified = false
 		c.tpl.ExecuteTemplate(w, "emailverified.gohtml", data)
 	}
 

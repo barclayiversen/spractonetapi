@@ -7,8 +7,10 @@ import (
 	"net/http"
 	"net/url"
 	"spractonetapi/driver"
+	"spractonetapi/models"
 	"spractonetapi/repository/userRepository"
 	"spractonetapi/utils"
+
 	"strconv"
 
 	"github.com/julienschmidt/httprouter"
@@ -45,10 +47,14 @@ func (c Controller) VerifyEmail(w http.ResponseWriter, r *http.Request, ps httpr
 		utils.RespondWithError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	http.Redirect(w, r, "/dashboard", 303)
-	// c.tpl.ExecuteTemplate(w, "emailverified.gohtml", nil)
+	var data models.Data
+	data.Verified = true
+	// http.Redirect(w, r, "/dashboard", 303)
+	c.tpl.ExecuteTemplate(w, "emailverified.gohtml", data)
 	return
 }
 
 //basic auth goes in here
+func AlreadyLoggedIn(w http.ResponseWriter, r *http.Request) bool {
+	return false
+}
