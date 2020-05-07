@@ -2,6 +2,7 @@ package userRepository
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"spractonetapi/models"
@@ -16,8 +17,8 @@ func logFatal(err error) {
 }
 
 func (u UserRepository) Signup(db *sql.DB, user models.User) (models.User, error) {
-	stmt := "INSERT INTO USERS (email,password,username) VALUES ($1, $2, $3) RETURNING id;"
-	err := db.QueryRow(stmt, user.Email, user.Password, user.Username).Scan(&user.ID)
+	stmt := "INSERT INTO USERS (email,password,username,activation_key,activated) VALUES ($1, $2, $3, $4, false) RETURNING id;"
+	err := db.QueryRow(stmt, user.Email, user.Password, user.Username, user.SignupKey).Scan(&user.ID)
 
 	if err != nil {
 		fmt.Println(err)
@@ -30,11 +31,14 @@ func (u UserRepository) Signup(db *sql.DB, user models.User) (models.User, error
 
 func (u UserRepository) Login(db *sql.DB, user models.User) (models.User, error) {
 
-	row := db.QueryRow("SELECT id, email, username, password FROM users WHERE email = $1", user.Email)
-	err := row.Scan(&user.ID, &user.Email, &user.Username, &user.Password)
+	row := db.QueryRow("SELECT id, email, username, password, activated FROM users WHERE email = $1", user.Email)
+	err := row.Scan(&user.ID, &user.Email, &user.Username, &user.Password, &user.Activated)
 
 	if err != nil {
 		return user, err
+	}
+	if user.Activated == false {
+		return user, errors.New("Please activate your account to log in.")
 	}
 
 	return user, nil
@@ -50,4 +54,34 @@ func (u UserRepository) GetUserById(db *sql.DB, user models.User, userId int) (m
 	}
 
 	return user, nil
+}
+
+func (u UserRepository) CheckKey(db *sql.DB, id int, uuid string) error {
+	var user models.User
+	row := db.QueryRow("SELECT id, activation_key, activated FROM users WHERE id = $1", id)
+	err := row.Scan(&user.ID, &user.SignupKey, &user.Activated)
+
+	if err != nil {
+		log.Println(err)
+		return errors.New("Something went wrong, please try again later.")
+	}
+
+	if user.Activated == true {
+		log.Println("Already activated")
+		return errors.New("This account is already activated")
+	}
+
+	if uuid == user.SignupKey && id == user.ID {
+		db.Query("UPDATE users SET activated = TRUE WHERE id = $1", id)
+		return nil
+	} else {
+		log.Println("There was an error verifying the email.")
+		log.Println("Here are the values:")
+		log.Println("user id that was provided:", id)
+		log.Println("uuid that was passed in:", uuid)
+		log.Println("user id from DB", user.ID)
+		log.Println("Signup key from DB:", user.SignupKey)
+
+		return errors.New("Something didn't match")
+	}
 }

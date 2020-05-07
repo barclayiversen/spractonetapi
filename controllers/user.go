@@ -10,9 +10,11 @@ import (
 	"spractonetapi/models"
 	"spractonetapi/repository/userRepository"
 	"spractonetapi/utils"
+	"strconv"
 	"strings"
 
 	"github.com/dgrijalva/jwt-go"
+	uuid "github.com/satori/go.uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -25,12 +27,6 @@ func (c Controller) HelloWorld() http.HandlerFunc {
 func (c Controller) Signup(db *sql.DB) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Headers", "Origin, Accept, Content-Type, Authorization, Access-Control-Allow-Origin")
-
-		if r.Method == "OPTIONS" {
-			return
-		}
 
 		var user models.User
 		json.NewDecoder(r.Body).Decode(&user)
@@ -50,14 +46,30 @@ func (c Controller) Signup(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
+		EmailIsValid := utils.IsEmail(user)
+
+		if EmailIsValid != true {
+			utils.RespondWithError(w, http.StatusBadRequest, "Please provide a valid Email address IE email@domain.com")
+			return
+		}
+
 		hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), 10)
 
 		if err != nil {
-			log.Fatal(err)
+			log.Println(err)
+			utils.RespondWithError(w, http.StatusInternalServerError, "Something went wrong. Please try again later.")
+			return
 		}
 
 		user.Password = string(hash)
 
+		u2 := uuid.Must(uuid.NewV4()).String()
+		if err != nil {
+			fmt.Printf("Something went wrong: %s", err)
+			return
+		}
+
+		user.SignupKey = u2
 		userRepo := userRepository.UserRepository{}
 		user, err = userRepo.Signup(db, user)
 
@@ -67,20 +79,41 @@ func (c Controller) Signup(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		if err != nil && err.Error() != "pq: duplicate key value violates unique constraint \"users_email_key\"" {
-			utils.RespondWithError(w, http.StatusBadRequest, err.Error())
+		if err != nil && err.Error() == "pq: duplicate key value violates unique constraint \"username_is_unique\"" {
+			utils.RespondWithError(w, http.StatusBadRequest, "That username is taken")
+			return
 		}
-
-		token, err := utils.GenerateToken(user)
 
 		if err != nil {
-			log.Fatal(err)
+			utils.RespondWithError(w, http.StatusBadRequest, "Something went wrong")
+			return
 		}
 
-		//Data structures could be better here
-		user.Password = ""
-		user.Token = token
-		utils.ResponseJSON(w, user)
+		// Create magic link
+		var tokenString string
+
+		if os.Getenv("ENV") == "dev" {
+			tokenString = "http://localhost:8080/verifyemail?token="
+		}
+
+		if os.Getenv("ENV") == "prod" {
+			tokenString = "https://api.spracto.net/verifyemail?token="
+		}
+
+		fmt.Printf("UUIDv4: %s\n", u2)
+		tokenString += u2
+		tokenString += "&userid="
+		tokenString += strconv.Itoa(user.ID)
+
+		fmt.Println(tokenString)
+
+		err = utils.Send(user, tokenString)
+		if err != nil {
+			utils.RespondWithError(w, http.StatusBadGateway, "We weren't able to send you a verifcation email.")
+			return
+		}
+
+		return
 	}
 
 }
@@ -88,12 +121,6 @@ func (c Controller) Signup(db *sql.DB) http.HandlerFunc {
 func (c Controller) Login(db *sql.DB) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*") //find a way to auto add this header in every request.
-		w.Header().Set("Access-Control-Allow-Headers", "Origin, Accept, Content-Type, Authorization, Access-Control-Allow-Origin")
-
-		if r.Method == "OPTIONS" {
-			return
-		}
 
 		var user models.User
 
@@ -111,7 +138,9 @@ func (c Controller) Login(db *sql.DB) http.HandlerFunc {
 				utils.RespondWithError(w, http.StatusBadRequest, "The User does not exist")
 				return
 			} else {
-				log.Fatal(err)
+				log.Println(err)
+				utils.RespondWithError(w, http.StatusBadRequest, err.Error())
+				return
 			}
 		}
 
@@ -140,10 +169,6 @@ func (c Controller) TokenVerifyMiddleware(next http.HandlerFunc) http.HandlerFun
 
 		w.Header().Set("Access-Control-Allow-Headers", "Accepts, Origin, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, X-Requested-With, Access-Control-Allow-Origin")
 		w.Header().Set("Access-Control-Allow-Origin", "*")
-
-		if r.Method == "OPTIONS" {
-			return
-		}
 
 		var errorObject models.Error
 		authHeader := r.Header.Get("Authorization")
