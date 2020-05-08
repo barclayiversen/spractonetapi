@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"spractonetapi/models"
+	"time"
 )
 
 type UserRepository struct{}
@@ -16,9 +17,11 @@ func logFatal(err error) {
 	}
 }
 
+// Signup commits user data to the database and returns a user object
 func (u UserRepository) Signup(db *sql.DB, user models.User) (models.User, error) {
-	stmt := "INSERT INTO USERS (email,password,username,activation_key,activated) VALUES ($1, $2, $3, $4, false) RETURNING id;"
-	err := db.QueryRow(stmt, user.Email, user.Password, user.Username, user.SignupKey).Scan(&user.ID)
+	stmt := "INSERT INTO USERS (email,password,username,activation_key,activated) VALUES ($1, $2, $3, $4, $5, false) RETURNING id;"
+	createdAt := time.Now().Unix()
+	err := db.QueryRow(stmt, user.Email, user.Password, user.Username, user.SignupKey, createdAt).Scan(&user.ID)
 
 	if err != nil {
 		fmt.Println(err)
@@ -29,6 +32,7 @@ func (u UserRepository) Signup(db *sql.DB, user models.User) (models.User, error
 	return user, nil
 }
 
+// Login returs user data to be used for authentication.
 func (u UserRepository) Login(db *sql.DB, user models.User) (models.User, error) {
 
 	row := db.QueryRow("SELECT id, email, username, password, activated FROM users WHERE email = $1", user.Email)
@@ -44,9 +48,10 @@ func (u UserRepository) Login(db *sql.DB, user models.User) (models.User, error)
 	return user, nil
 }
 
+// GetUserById retrieves the specified user
 func (u UserRepository) GetUserById(db *sql.DB, user models.User, userId int) (models.User, error) {
-	row := db.QueryRow("SELECT id, email, username FROM users WHERE id = $1", userId)
-	err := row.Scan(&user.ID, &user.Email, &user.Username)
+	row := db.QueryRow("SELECT id, email, activated, username FROM users WHERE id = $1", userId)
+	err := row.Scan(&user.ID, &user.Email, &user.Activated, &user.Username)
 
 	if err != nil {
 
@@ -56,6 +61,7 @@ func (u UserRepository) GetUserById(db *sql.DB, user models.User, userId int) (m
 	return user, nil
 }
 
+// CheckKey is for activating accounts, only called once per user
 func (u UserRepository) CheckKey(db *sql.DB, id int, uuid string) error {
 	var user models.User
 	row := db.QueryRow("SELECT id, activation_key, activated FROM users WHERE id = $1", id)
