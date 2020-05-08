@@ -24,12 +24,13 @@ func main() {
 	controller := controllers.Controller{}
 
 	router := mux.NewRouter()
-
 	router.HandleFunc("/", controller.SetHeader(controller.HelloWorld())).Methods("GET", "OPTIONS")
 	router.HandleFunc("/login", controller.SetHeader(controller.Login(db))).Methods("POST", "OPTIONS")
 	router.HandleFunc("/users/{id}", controller.SetHeader(controller.TokenVerifyMiddleware(controller.GetUserById(db)))).Methods("GET", "OPTIONS")
 	router.HandleFunc("/users", controller.SetHeader(controller.Signup(db))).Methods("POST", "OPTIONS")
 	router.HandleFunc("/verifyemail", controller.SetHeader(controller.VerifyEmail(db))).Methods("GET", "OPTIONS")
+	router.HandleFunc("/users/{id}/posts", controller.SetHeader(controller.TokenVerifyMiddleware(controller.GetUserPosts(db)))).Methods("GET", "OPTIONS")
+	router.HandleFunc("/users/{id}/posts", controller.SetHeader(controller.TokenVerifyMiddleware(controller.CreatePost(db)))).Methods("POST", "OPTIONS")
 
 	router.Use(mux.CORSMethodMiddleware(router))
 
