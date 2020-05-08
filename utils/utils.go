@@ -14,19 +14,21 @@ import (
 	"gopkg.in/go-playground/validator.v9"
 )
 
+// MailSender is a struct to hold auth data for the mailer account
 type MailSender struct {
 	Addr string
 	Auth smtp.Auth
 	From mail.Address
 }
 
-// Mail to send.
+// Mail is for the activation email
 type Mail struct {
 	To      mail.Address
 	Subject string
 	Body    string
 }
 
+// IsEmail validator
 func IsEmail(u models.User) bool {
 	v := validator.New()
 	err := v.Struct(u)
@@ -38,6 +40,7 @@ func IsEmail(u models.User) bool {
 	return true
 }
 
+// RespondWithError returns an error in JSON
 func RespondWithError(w http.ResponseWriter, status int, message string) {
 	var error models.Error
 	error.Message = message
@@ -45,10 +48,12 @@ func RespondWithError(w http.ResponseWriter, status int, message string) {
 	json.NewEncoder(w).Encode(error)
 }
 
+// ResponseJSON provides successful json reponses
 func ResponseJSON(w http.ResponseWriter, data interface{}) {
 	json.NewEncoder(w).Encode(data)
 }
 
+// GenerateToken is self explantory
 func GenerateToken(user models.User) (string, error) {
 
 	var err error
@@ -76,7 +81,7 @@ func Send(u models.User, activationUrl string) error {
 
 	to := []string{u.Email}
 	msg := []byte("From: " + "\n" + "To:" + u.Email + "\r\n" +
-		"Subject: Welcome to Spracto net \r\n" +
+		"Subject: Welcome to Spracto dot net \r\n" +
 		"\r\n" +
 		"Here's your link to activate your account: " + activationUrl)
 
