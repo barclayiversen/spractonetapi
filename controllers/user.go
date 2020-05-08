@@ -11,9 +11,8 @@ import (
 	"spractonetapi/repository/userRepository"
 	"spractonetapi/utils"
 	"strconv"
-	"strings"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/gorilla/mux"
 	uuid "github.com/satori/go.uuid"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -164,45 +163,24 @@ func (c Controller) Login(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-func (c Controller) TokenVerifyMiddleware(next http.HandlerFunc) http.HandlerFunc {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-		w.Header().Set("Access-Control-Allow-Headers", "Accepts, Origin, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, X-Requested-With, Access-Control-Allow-Origin")
+// GetUserById is for the initial population of data in the user dashboard
+func (c Controller) GetUserById(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
-
-		var errorObject models.Error
-		authHeader := r.Header.Get("Authorization")
-
-		bearerToken := strings.Split(authHeader, " ")
-		if len(bearerToken) == 2 {
-
-			authToken := bearerToken[1]
-			token, error := jwt.Parse(authToken, func(token *jwt.Token) (interface{}, error) {
-				if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-					return nil, fmt.Errorf("There was an error")
-				}
-
-				return []byte(os.Getenv("JWT_SECRET")), nil
-			})
-
-			if error != nil {
-				errorObject.Message = error.Error()
-				utils.RespondWithError(w, http.StatusUnauthorized, error.Error())
-				return
-			}
-
-			if token.Valid {
-
-				next.ServeHTTP(w, r)
-			} else {
-				errorObject.Message = error.Error()
-				utils.RespondWithError(w, http.StatusUnauthorized, error.Error())
-				return
-			}
-		} else {
-			errorObject.Message = "Invalid Token"
-			utils.RespondWithError(w, http.StatusUnauthorized, "Invalid Token")
+		w.Header().Set("Access-Control-Allow-Headers", "Origin, Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, X-Requested-With, Access-Control-Allow-Origin")
+		var user models.User
+		params := mux.Vars(r)
+		userRepo := userRepository.UserRepository{}
+		userId, err := strconv.Atoi(params["id"])
+		if err != nil {
+			fmt.Println("ERROR", err)
 			return
 		}
-	})
+		user, err = userRepo.GetUserById(db, user, userId)
+		if err != nil {
+			fmt.Println("ERROR", err)
+			return
+		}
+		utils.ResponseJSON(w, user)
+	}
 }
