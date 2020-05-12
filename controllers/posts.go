@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 	"spractonetapi/models"
 	"spractonetapi/repository/postRepository"
@@ -17,7 +18,29 @@ import (
 // GetUserPosts gets posts by user ID
 func (c Controller) GetUserPosts(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		utils.ResponseJSON(w, "End point works")
+		authHeader := r.Header.Get("Authorization")
+		bearerToken := strings.Split(authHeader, " ")
+		authToken := bearerToken[1]
+		token, error := jwt.Parse(authToken, func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fmt.Errorf("There was an error")
+			}
+
+			return []byte(os.Getenv("JWT_SECRET")), nil
+		})
+		if error != nil {
+			utils.RespondWithError(w, http.StatusUnauthorized, error.Error())
+			return
+		}
+		claims := token.Claims.(jwt.MapClaims)
+		id := int(claims["sub"].(float64))
+		postRepo := postRepository.PostRepository{}
+		posts, err := postRepo.GetUserPosts(db, id)
+		if err != nil {
+			fmt.Println(err)
+			utils.RespondWithError(w, http.StatusBadRequest, "Error getting user's posts")
+		}
+		utils.ResponseJSON(w, posts)
 	}
 }
 
@@ -26,11 +49,8 @@ func (c Controller) CreatePost(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		authHeader := r.Header.Get("Authorization")
-		fmt.Println("can I access headers in here? ", authHeader)
-
 		bearerToken := strings.Split(authHeader, " ")
 		authToken := bearerToken[1]
-
 		token, error := jwt.Parse(authToken, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("There was an error")
@@ -70,5 +90,34 @@ func (c Controller) CreatePost(db *sql.DB) http.HandlerFunc {
 
 		utils.ResponseJSON(w, "Post Created")
 		return
+	}
+}
+
+func (c Controller) DeletePost(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		userID, err := utils.GetUserIDFromToken(r)
+		if err != nil {
+			utils.RespondWithError(w, http.StatusBadRequest, "This was very unexpected")
+			return
+		}
+		u, err := url.Parse(r.RequestURI)
+		values, err := url.ParseQuery(u.RawQuery)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		postID := values.Get("id")
+
+		if err != nil {
+			utils.RespondWithError(w, http.StatusBadRequest, "This was very unexpected")
+			return
+		}
+		postRepo := postRepository.PostRepository{}
+		err = postRepo.DeletePost(db, userID, postID)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		utils.ResponseJSON(w, "Post Deleted")
 	}
 }
