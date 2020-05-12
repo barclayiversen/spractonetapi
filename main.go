@@ -31,6 +31,7 @@ func main() {
 	router.HandleFunc("/verifyemail", controller.SetHeader(controller.VerifyEmail(db))).Methods("GET", "OPTIONS")
 	router.HandleFunc("/users/{id}/posts", controller.SetHeader(controller.TokenVerifyMiddleware(controller.GetUserPosts(db)))).Methods("GET", "OPTIONS")
 	router.HandleFunc("/users/{id}/posts", controller.SetHeader(controller.TokenVerifyMiddleware(controller.CreatePost(db)))).Methods("POST", "OPTIONS")
+	router.HandleFunc("/posts/{id}", controller.SetHeader(controller.TokenVerifyMiddleware(controller.DeletePost(db))))
 
 	router.Use(mux.CORSMethodMiddleware(router))
 
