@@ -2,12 +2,14 @@ package utils
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"net/mail"
 	"net/smtp"
 	"os"
 	"spractonetapi/models"
+	"strings"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -48,12 +50,12 @@ func RespondWithError(w http.ResponseWriter, status int, message string) {
 	json.NewEncoder(w).Encode(error)
 }
 
-// ResponseJSON provides successful json reponses
+// ResponseJSON takes the reponse writer and some data to return to the user as a successful response
 func ResponseJSON(w http.ResponseWriter, data interface{}) {
 	json.NewEncoder(w).Encode(data)
 }
 
-// GenerateToken is self explantory
+// GenerateToken returns the user's token
 func GenerateToken(user models.User) (string, error) {
 
 	var err error
@@ -76,6 +78,7 @@ func GenerateToken(user models.User) (string, error) {
 	return tokenString, nil
 }
 
+// Send is for mailing the verify email
 func Send(u models.User, activationUrl string) error {
 	auth := smtp.PlainAuth("", os.Getenv("FROM"), os.Getenv("MAILPASS"), os.Getenv("SMTPSERVER"))
 
