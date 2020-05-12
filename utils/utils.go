@@ -95,3 +95,25 @@ func Send(u models.User, activationUrl string) error {
 
 	return nil
 }
+
+// GetUserIDFromToken is for verifying that the user requesting an action on a resource is authorized to do so
+func GetUserIDFromToken(r *http.Request) (int, error) {
+	authHeader := r.Header.Get("Authorization")
+	bearerToken := strings.Split(authHeader, " ")
+	authToken := bearerToken[1]
+	token, error := jwt.Parse(authToken, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("There was an error")
+		}
+
+		return []byte(os.Getenv("JWT_SECRET")), nil
+	})
+	if error != nil {
+		return 0, error
+	}
+	claims := token.Claims.(jwt.MapClaims)
+
+	fmt.Printf("%T\n", claims["sub"])
+	fmt.Println(claims["sub"])
+	return int(claims["sub"].(float64)), nil
+}
