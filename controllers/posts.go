@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/url"
 	"os"
 	"spractonetapi/models"
 	"spractonetapi/repository/postRepository"
@@ -13,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/gorilla/mux"
 )
 
 // GetUserPosts gets posts by user ID
@@ -64,12 +64,9 @@ func (c Controller) CreatePost(db *sql.DB) http.HandlerFunc {
 		}
 		claims := token.Claims.(jwt.MapClaims)
 
-		fmt.Printf("%T\n", claims["sub"])
-		fmt.Println(claims["sub"])
-
 		var post models.Post
 		json.NewDecoder(r.Body).Decode(&post)
-		fmt.Println(post)
+
 		if post.Title == "" {
 			utils.RespondWithError(w, http.StatusBadRequest, "Posts require a title")
 			return
@@ -100,18 +97,9 @@ func (c Controller) DeletePost(db *sql.DB) http.HandlerFunc {
 			utils.RespondWithError(w, http.StatusBadRequest, "This was very unexpected")
 			return
 		}
-		u, err := url.Parse(r.RequestURI)
-		values, err := url.ParseQuery(u.RawQuery)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		postID := values.Get("id")
+		params := mux.Vars(r)
+		postID := params["id"]
 
-		if err != nil {
-			utils.RespondWithError(w, http.StatusBadRequest, "This was very unexpected")
-			return
-		}
 		postRepo := postRepository.PostRepository{}
 		err = postRepo.DeletePost(db, userID, postID)
 		if err != nil {
