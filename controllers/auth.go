@@ -85,8 +85,14 @@ func (c Controller) VerifyEmail(db *sql.DB) http.HandlerFunc {
 			utils.RespondWithError(w, http.StatusBadRequest, err.Error())
 			return
 		}
+		var user models.User
+		user, err = userRepo.GetUserById(db, user, id)
+		token, err := utils.GenerateToken(user)
+		if err != nil {
+			utils.ResponseJSON(w, "Email Verified, error getting token. Please log in.")
+		}
 
-		utils.ResponseJSON(w, "Email Verified!")
+		utils.ResponseJSON(w, token)
 		return
 	}
 }
