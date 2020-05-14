@@ -48,23 +48,30 @@ func (p PostRepository) GetUserPosts(db *sql.DB, userID int) ([]models.Post, err
 }
 
 func (p PostRepository) DeletePost(db *sql.DB, userId int, postId string) error {
-	stmt := "SELECT user_id FROM posts WHERE id = $1"
+	stmt := "SELECT * FROM posts WHERE id = $1"
+
 	id, err := strconv.Atoi(postId)
 	if err != nil {
-		return &MyError{}
+		fmt.Println("err 1", err)
+		//return &MyError{}
+		return err
 	}
+	fmt.Println("thisx is a s")
 	row := db.QueryRow(stmt, id)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// 	return err
-	// }
 	var post models.Post
-	row.Scan(&post.User_id)
+	row.Scan(&post.Id, &post.Title, &post.Post, &post.User_id, &post.Created_at)
 
 	if userId != post.User_id {
+		fmt.Println("err 2", err)
 		return &MyError{}
+		//return err
 	}
-	fmt.Println(row)
+	stmt = "DELETE FROM posts WHERE id = $1"
+	_, err = db.Exec(stmt, postId)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
 	return nil
 }
 
