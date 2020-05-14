@@ -11,15 +11,16 @@ import (
 type PostRepository struct{}
 
 // CreatePost is a function
-func (p PostRepository) CreatePost(db *sql.DB, post models.Post) error {
-	createdAt := time.Now().Unix()
-	stmt := "INSERT INTO posts (title, post, created_at, user_id) VALUES ($1, $2, $3, $4)"
-	_, err := db.Exec(stmt, post.Title, post.Post, createdAt, post.User_id)
+func (p PostRepository) CreatePost(db *sql.DB, post models.Post) (models.Post, error) {
+	post.Created_at = int(time.Now().Unix())
+	stmt := "INSERT INTO posts (title, post, created_at, user_id) VALUES ($1, $2, $3, $4) RETURNING created_at"
+	_, err := db.Exec(stmt, post.Title, post.Post, post.Created_at, post.User_id)
 	if err != nil {
 		fmt.Println(err)
-		return err
+		return post, err
 	}
-	return nil
+
+	return post, nil
 }
 
 // GetUserPosts gets a user's posts by userid

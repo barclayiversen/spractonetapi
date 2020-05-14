@@ -79,17 +79,18 @@ func (c Controller) CreatePost(db *sql.DB) http.HandlerFunc {
 
 		post.User_id = int(claims["sub"].(float64))
 		postRepo := postRepository.PostRepository{}
-		err := postRepo.CreatePost(db, post)
+		post, err := postRepo.CreatePost(db, post)
 		if err != nil {
 			fmt.Println("Create post error:", err)
 			utils.RespondWithError(w, http.StatusBadRequest, "Error creating post")
 		}
 
-		utils.ResponseJSON(w, "Post Created")
+		utils.ResponseJSON(w, post)
 		return
 	}
 }
 
+// DeletePost deletes a post based on the post id in the params and the user id in the token.
 func (c Controller) DeletePost(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		userID, err := utils.GetUserIDFromToken(r)
