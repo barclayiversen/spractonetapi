@@ -13,12 +13,13 @@ type PostRepository struct{}
 // CreatePost is a function
 func (p PostRepository) CreatePost(db *sql.DB, post models.Post) (models.Post, error) {
 	post.Created_at = int(time.Now().Unix())
-	stmt := "INSERT INTO posts (title, post, created_at, user_id) VALUES ($1, $2, $3, $4) RETURNING created_at"
-	_, err := db.Exec(stmt, post.Title, post.Post, post.Created_at, post.User_id)
+	stmt := "INSERT INTO posts (title, post, created_at, user_id) VALUES ($1, $2, $3, $4) RETURNING id"
+	err := db.QueryRow(stmt, post.Title, post.Post, post.Created_at, post.User_id).Scan(&post.Id)
 	if err != nil {
 		fmt.Println(err)
 		return post, err
 	}
+	fmt.Println("postrepo CreatePost:", post)
 
 	return post, nil
 }
