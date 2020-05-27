@@ -166,8 +166,8 @@ func (c Controller) Login(db *sql.DB) http.HandlerFunc {
 // GetUserById is for the initial population of data in the user dashboard
 func (c Controller) GetUserById(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Headers", "Origin, Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, X-Requested-With, Access-Control-Allow-Origin")
+		// w.Header().Set("Access-Control-Allow-Origin", "*")
+		// w.Header().Set("Access-Control-Allow-Headers", "Origin, Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, X-Requested-With, Access-Control-Allow-Origin")
 		var user models.User
 		params := mux.Vars(r)
 		userRepo := userRepository.UserRepository{}
@@ -182,5 +182,17 @@ func (c Controller) GetUserById(db *sql.DB) http.HandlerFunc {
 			return
 		}
 		utils.ResponseJSON(w, user)
+	}
+}
+
+func (c Controller) UpdateUser(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		utils.ResponseJSON(w, "Update User works")
+	}
+}
+
+func (c Controller) DeleteUser(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		utils.ResponseJSON(w, "Delete User works")
 	}
 }

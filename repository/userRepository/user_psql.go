@@ -19,7 +19,7 @@ func logFatal(err error) {
 
 // Signup commits user data to the database and returns a user object
 func (u UserRepository) Signup(db *sql.DB, user models.User) (models.User, error) {
-	stmt := "INSERT INTO USERS (email,password,username,activation_key,activated) VALUES ($1, $2, $3, $4, $5, false) RETURNING id;"
+	stmt := "INSERT INTO USERS (email,password,username,activation_key, created_at, activated) VALUES ($1, $2, $3, $4, $5, false) RETURNING id;"
 	createdAt := time.Now().Unix()
 	err := db.QueryRow(stmt, user.Email, user.Password, user.Username, user.SignupKey, createdAt).Scan(&user.ID)
 
